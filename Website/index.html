@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>click me</title>
+
+  <style>
+    body{
+      margin:0;
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(135deg,#ffdde1,#ee9ca7);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      overflow-x:hidden;
+    }
+
+    /* ===== GATE ===== */
+    .gateWrap{
+      width:min(560px,92vw);
+      background:#ffffffdd;
+      border-radius:24px;
+      padding:28px;
+      box-shadow:0 20px 60px rgba(0,0,0,.2);
+      text-align:center;
+      z-index:1;
+      position:relative;
+    }
+    .gateRow{
+      display:flex;
+      gap:10px;
+      justify-content:center;
+      align-items:center;
+      margin-top:10px;
+      width:100%;
+    }
+    .gateInput{
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid #0002;
+      background:#fff;
+      font-size:16px;
+      outline:none;
+      flex:1;
+      min-width:0;
+      position:relative;
+      z-index:2;
+    }
+    .gateBtn{
+      border:0;
+      border-radius:14px;
+      padding:12px 16px;
+      font-weight:900;
+      cursor:pointer;
+      background:#111;
+      color:#fff;
+      font-size:16px;
+      flex:0 0 auto;
+      position:relative;
+      z-index:2;
+      touch-action:manipulation;
+    }
+    .gateErr{
+      margin-top:10px;
+      font-weight:800;
+      min-height:22px;
+    }
+    .gateHint{
+      margin-top:8px;
+      font-size:13px;
+      opacity:.75;
+    }
+    @media (max-width:480px){
+      .gateRow{ flex-direction:column; align-items:stretch; }
+      .gateBtn{ width:100%; }
+    }
+
+    /* ===== MAIN CARD ===== */
+    .card{
+      width:min(560px,92vw);
+      background:#ffffffdd;
+      border-radius:24px;
+      padding:28px;
+      box-shadow:0 20px 60px rgba(0,0,0,.2);
+      text-align:center;
+      position:relative;
+      z-index:1;
+      display:none;
+    }
+    .stage{
+      position:relative;
+      height:220px;
+      margin-top:18px;
+      border-radius:18px;
+      background:#fff8;
+      overflow:hidden;
+      border:1px solid #0001;
+    }
+
+    /* Only stage buttons are absolute */
+    .stage button{
+      position:absolute;
+      border:0;
+      border-radius:999px;
+      padding:14px 18px;
+      font-weight:800;
+      cursor:pointer;
+      user-select:none;
+      touch-action:manipulation;
+    }
+
+    #yes{
+      background:#22c55e;
+      color:#fff;
+      left:32%;
+      top:66%;
+      transition:transform .2s ease;
+    }
+    #no{
+      background:#ef4444;
+      color:#fff;
+      left:56%;
+      top:66%;
+    }
+
+    .below{
+      margin-top:22px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:12px;
+    }
+    .msg{ min-height:32px; font-weight:700; }
+
+    .noForm button{
+      position:static;
+      background:#fff;
+      color:#444;
+      border:1px solid #0002;
+      padding:10px 16px;
+      font-size:14px;
+      border-radius:999px;
+      cursor:pointer;
+      touch-action:manipulation;
+    }
+    .tiny{ font-size:13px; opacity:.8; }
+
+    .roseCat{
+      width:120px;
+      max-width:40vw;
+      margin:12px auto 0;
+      display:block;
+      border-radius:16px;
+    }
+
+    /* ===== FLOATING CATS ===== */
+    .cats{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      overflow:hidden;
+      z-index:0;
+    }
+    .cat{
+      position:absolute;
+      opacity:.9;
+      animation:floatCat linear forwards;
+    }
+    @keyframes floatCat{
+      from{ transform:translateY(110vh); opacity:0; }
+      10%{ opacity:1; }
+      to{ transform:translateY(-120px) translateX(var(--drift)) rotate(360deg); opacity:0; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="cats" id="cats"></div>
+
+  <!-- GATE -->
+  <div class="gateWrap" id="gate">
+    <h1>click me</h1>
+    <p>what was the name of my favourite cat</p>
+
+    <div class="gateRow">
+      <input id="gateInput" class="gateInput" placeholder="answer…" autocomplete="off" />
+      <button class="gateBtn" id="gateBtn" type="button">enter</button>
+    </div>
+
+    <div class="gateErr" id="gateErr"></div>
+    <div class="gateHint">hint: lowercase is fine</div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="card" id="content">
+    <h1>Millie, will you be my Valentine? 💖</h1>
+    <p>I made this just for you 🐺</p>
+
+    <img src="./rose-kitten.gif" alt="cute kitten with a rose" class="roseCat"/>
+
+    <div class="stage" id="stage">
+      <button id="yes">YES 💘</button>
+      <button id="no">no 🙈</button>
+    </div>
+
+    <div class="below">
+      <div class="msg" id="msg"></div>
+      <form class="noForm" id="noForm">
+        <button type="submit">No thanks</button>
+      </form>
+      <div class="tiny">You can still say no :(</div>
+    </div>
+  </div>
+
+  <script>
+    const SECRET = "bella";
+
+    const gate = document.getElementById("gate");
+    const content = document.getElementById("content");
+    const gateInput = document.getElementById("gateInput");
+    const gateBtn = document.getElementById("gateBtn");
+    const gateErr = document.getElementById("gateErr");
+
+    function unlock(){
+      gate.style.display = "none";
+      content.style.display = "block";
+      initValentine();
+    }
+
+    function check(){
+      if (gateInput.value.trim().toLowerCase() === SECRET) unlock();
+      else gateErr.textContent = "nope 🙈";
+    }
+
+    gateBtn.addEventListener("click", check);
+    gateInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") check();
+    });
+
+    // Floating cats
+    const cats = document.getElementById("cats");
+    setInterval(() => {
+      const c = document.createElement("div");
+      c.className = "cat";
+      c.textContent = ["🐈","🐱","😺","🐈‍⬛","🐺","🌑"][Math.floor(Math.random()*6)];
+      c.style.left = Math.random()*100 + "vw";
+      c.style.fontSize = (18 + Math.random()*16) + "px";
+      c.style.setProperty("--drift", (Math.random()*120 - 60) + "px");
+      c.style.animationDuration = (6 + Math.random()*6) + "s";
+      cats.appendChild(c);
+      setTimeout(() => c.remove(), 12000);
+    }, 400);
+
+    function initValentine(){
+      const noBtn = document.getElementById("no");
+      const yesBtn = document.getElementById("yes");
+      const stage = document.getElementById("stage");
+      const msg = document.getElementById("msg");
+      const noForm = document.getElementById("noForm");
+
+      let dodges = 0;
+      const MAX_DODGES = 12;
+
+      const lines = [
+        "HEY 😳",
+        "EXCUSE ME??",
+        "Millie pls 😭",
+        "You’re persistent huh",
+        "I’m panicking",
+        "okay okay 😅",
+        "this is serious now",
+        "be fr",
+        "Be FR!!!",
+        "OK, BE SO FFR",
+        "so no twilight???"
+      ];
+
+      function moveNo(){
+        const r = stage.getBoundingClientRect();
+        noBtn.style.left = Math.random() * (r.width - noBtn.offsetWidth) + "px";
+        noBtn.style.top  = Math.random() * (r.height - noBtn.offsetHeight) + "px";
+      }
+
+      noBtn.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+
+        if (dodges >= MAX_DODGES) return;
+        dodges++;
+
+        // cycle text
+        msg.textContent = lines[Math.min(dodges - 1, lines.length - 1)];
+
+        // shrink NO + grow YES
+        noBtn.style.transform = `scale(${Math.max(.15, 1 - dodges * .08)})`;
+        yesBtn.style.transform = `scale(${Math.min(1.8, 1 + dodges * .06)})`;
+
+        moveNo();
+
+        if (dodges >= MAX_DODGES){
+          noBtn.style.opacity = 0;
+          noBtn.style.pointerEvents = "none";
+        }
+      });
+
+      yesBtn.addEventListener("click", () => {
+        window.location.href = "schedule.html";
+      });
+
+      noForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const data = new FormData();
+        data.append("_subject", "Valentine response: NO 💛");
+        data.append("who", "Millie");
+        data.append("response", "No thanks");
+
+        const res = await fetch("https://formspree.io/f/maqbevgz", {
+          method: "POST",
+          body: data,
+          headers: { "Accept": "application/json" }
+        });
+
+        if (res.ok) window.location.href = "no.html";
+        else alert("Something went wrong. Please try again.");
+      });
+
+      moveNo();
+    }
+  </script>
+</body>
+</html>
